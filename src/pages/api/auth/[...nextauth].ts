@@ -17,6 +17,7 @@ export default NextAuth({
     callbacks: {
 
         async session(session) {
+            console.log('executando callback session()');
             try {
                 const userRef = await fauna.query(q.Get(
                     q.Match(
@@ -52,15 +53,6 @@ export default NextAuth({
                 };
             }
 
-        },
-
-        // acrescentar se tem subscrição ativa ou não
-        async jwt(token, user, account, profile, isNewUser) {
-            // Add access_token to the token right after signin
-            if (account?.accessToken) {
-                token.accessToken = account.accessToken
-            }
-            return token
         },
 
         // sign in só é feito com sucesso se essa função retornar true
