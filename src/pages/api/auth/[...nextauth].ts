@@ -16,21 +16,23 @@ export default NextAuth({
 
     callbacks: {
 
-        async session(session: Session) {
+        async session(session) {
             try {
-                const userActiveSubscription = fauna.query(
+                const userRef = await fauna.query(q.Get(
+                    q.Match(
+                        q.Index('user_by_email'),
+                        q.Casefold(session.user.email)
+                    )
+                ));
+
+                const userActiveSubscription = await fauna.query(
                     q.Get(
                         q.Intersection([
                             q.Match(
                                 q.Index('subscription_by_user_ref'),
                                 q.Select(
                                     "ref",
-                                    q.Get(
-                                        q.Match(
-                                            q.Index('user_by_email'),
-                                            q.Casefold(session.user.email)
-                                        )
-                                    )
+                                    userRef
                                 )
                             ),
                             q.Match(
@@ -38,20 +40,27 @@ export default NextAuth({
                                 "active"
                             )
                         ])
-                    ))
-
+                    ));
                 return {
                     ...session,
                     activeSubscription: userActiveSubscription
                 }
             } catch (err) {
-                console.log(err.message);
                 return {
                     ...session,
                     activeSubscription: null
                 };
             }
 
+        },
+
+        // acrescentar se tem subscrição ativa ou não
+        async jwt(token, user, account, profile, isNewUser) {
+            // Add access_token to the token right after signin
+            if (account?.accessToken) {
+                token.accessToken = account.accessToken
+            }
+            return token
         },
 
         // sign in só é feito com sucesso se essa função retornar true

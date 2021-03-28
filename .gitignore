@@ -32,3 +32,6 @@ yarn-error.log*
 
 # vercel
 .vercel
+src/services/stripe-js.ts
+
+stripe.exe
